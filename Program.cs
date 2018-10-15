@@ -6,14 +6,26 @@ using Discord.WebSocket;
 
 namespace Sora
 {
+    
     class Program
     {
         static void Main(string[] args)
                  => new Program().MainAsync().GetAwaiter().GetResult();
 
+        [Command("yeet",3)]
+        public static void Yeet()
+        {
+            
+        }
+        
         DiscordSocketClient _client; 
         public async Task MainAsync()
         {
+            Command.MapCommands();
+            
+            
+            Config.GetSavedData();
+            
              _client = new DiscordSocketClient();
 
             _client.Log += LogAsync;
