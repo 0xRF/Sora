@@ -9,7 +9,7 @@ namespace Sora
         {
             foreach (var msg in szlogs)
             {
-                File.AppendAllText(Environment.CurrentDirectory +"/log.txt", msg.ToString());
+                File.AppendAllText(Environment.CurrentDirectory + "/log.txt", msg.ToString() + "\n");
                 Console.WriteLine(msg.ToString());
             }
         }
