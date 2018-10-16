@@ -22,11 +22,5 @@ namespace Sora
             await Task.Delay(-1);
         }
 
-        [Command("ping")]
-        public static async Task PingPong(SocketMessage sm)
-        {
-            await sm.Channel.SendMessageAsync("Pong");
-        }
-
     }
 }
