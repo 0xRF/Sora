@@ -11,11 +11,13 @@ namespace Sora
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
     public class Command : Attribute
     {
-        public string szInvoke = String.Empty;
-        public string szFailed = "";
-        public int cParams = 0;
-        public MethodInfo method;
-        public bool bSilent = false;
+        private string szInvoke = String.Empty;
+        private string szFailed = "";
+        private int cParams = 0;
+        private MethodInfo method;
+        private bool bSilent = false;
+        private bool bRequiresMessageInfo = false;
+        
 
         public Command(string cmd, bool silent = false)
         {
@@ -32,7 +34,7 @@ namespace Sora
 
         private static Dictionary<string, List<Command>> functionMap = new Dictionary<string, List<Command>>();
 
-        private static BindingFlags _flags = BindingFlags.Instance | BindingFlags.Static | BindingFlags.NonPublic |
+        private static readonly BindingFlags Flags = BindingFlags.Instance | BindingFlags.Static | BindingFlags.NonPublic |
                                             BindingFlags.Public;
 
         public static void MapCommands()
@@ -40,24 +42,33 @@ namespace Sora
             Assembly.GetExecutingAssembly().GetTypes().ToList().ForEach(x =>
             {
                 var functions = x.GetMethods().Where(f => f.GetCustomAttribute<Command>() != null).ToList();
-                
+
                 functions.ForEach(func =>
+                {
+                    if (func.ReturnType != typeof(Task))
+                    {
+                        Log.Log(func.Name + " was not a valid function");
+                        return;
+                    }
                     func.GetCustomAttributes<Command>().ToList().ForEach(pAtt =>
                     {
                         pAtt.method = func;
                         pAtt.cParams = func.GetParameters().Length;
 
-                        if(functionMap.ContainsKey(pAtt.szInvoke))
-                        functionMap[pAtt.szInvoke].Add(pAtt);
+                        pAtt.bRequiresMessageInfo = func.GetParameters()[0].ParameterType == typeof(SocketMessage);
+
+                        if (functionMap.ContainsKey(pAtt.szInvoke))
+                            functionMap[pAtt.szInvoke].Add(pAtt);
                         else
-                            functionMap.Add(pAtt.szInvoke, new List<Command>(){pAtt});
-                    }));
+                            functionMap.Add(pAtt.szInvoke, new List<Command>() { pAtt });
+                    });
+                });
             });
             
             Log.Log("Funcs " + functionMap.Count);
         }
 
-        public static async Task Run(ISocketMessageChannel channel, params string[] messages)
+        public static async Task Run(SocketMessage sm, params string[] messages)
         {
             var szCmd = messages[0].Remove(0, Bot.prefix.Length);
 
@@ -65,11 +76,23 @@ namespace Sora
             {
                 foreach (var cmd in functionMap[szCmd])
                 {
-                    if(messages.Count() - 1 == cmd.cParams)
+
+                    if(messages.Count() - 1 == cmd.cParams || (cmd.bRequiresMessageInfo && messages.Count() - 1 == cmd.cParams - 1))
                     {
                         var b = messages.ToList();
                         b.RemoveAt(0);
-                        cmd.method.Invoke(null, b.ToArray());
+                        
+                        var objects = new object[cmd.cParams];
+                        if (cmd.bRequiresMessageInfo)
+                        {
+                            objects[0] = sm;
+                            for (int i = 0; i < b.Count(); i++)
+                                objects[i + 1] = b[i];
+                        }
+                        else
+                            objects = b.ToArray();
+                            
+                        await (Task)cmd.method.Invoke(null, objects);
                     }
                     else
                     {
@@ -77,9 +100,9 @@ namespace Sora
                         if(!cmd.bSilent)
                         {
                             if (cmd.szFailed == "")
-                                await channel.SendMessageAsync($"Failed!, expected {cmd.cParams} got {messages.Count() - 1}");
+                                await sm.Channel.SendMessageAsync($"Failed!, expected {(cmd.bRequiresMessageInfo ? cmd.cParams - 1 : cmd.cParams)} items, got {messages.Count() - 1}");
                             else
-                                await channel.SendMessageAsync(cmd.szFailed);
+                                await sm.Channel.SendMessageAsync(cmd.szFailed);
                         }
 
                     }

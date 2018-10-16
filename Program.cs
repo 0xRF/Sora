@@ -9,8 +9,7 @@ namespace Sora
     
     class Program
     {
-        static void Main(string[] args)
-                 => Program.EntryPoint().GetAwaiter().GetResult();
+        static void Main(string[] args) => EntryPoint().GetAwaiter().GetResult();
         
   
         public static async Task EntryPoint()
@@ -23,11 +22,11 @@ namespace Sora
             await Task.Delay(-1);
         }
 
-        [Command("yeet")]
-        public static void Function(string yeet, string yoot)
+        [Command("ping")]
+        public static async Task PingPong(SocketMessage sm)
         {
-            Console.WriteLine("YEET");
-
+            await sm.Channel.SendMessageAsync("Pong");
         }
+
     }
 }
