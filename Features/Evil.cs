@@ -2,6 +2,7 @@
 using Discord.WebSocket;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -12,7 +13,12 @@ namespace Sora.Features
         private static Dictionary<ulong, IDisposable> zombieDisposable = new Dictionary<ulong, IDisposable>();
         private static List<ulong> skeletonGuilds = new List<ulong>();
         private static bool ainz = false;
-        
+
+        public override void OnMentioned(SocketMessage message)
+        {
+            message.Channel.SendFileAsync(Bot.asm_dir + "/ping.png");
+        }
+
         [Command("shubbub")]
         public static async Task Shubbub(SocketMessage message)
         {
@@ -107,49 +113,63 @@ namespace Sora.Features
         [Command("ainz")]
         public static async Task AlwaysTyping(SocketMessage message)
         {
+            var guilds = Bot.Instance.client.Guilds;
+            await message.Channel.SendMessageAsync("Ainz mode get's rate limited, huge rip..");
+            await message.DeleteAsync();
             if (!ainz)
             {
-                foreach (var guild in Bot.Instance.client.Guilds)
+                foreach (var guild in guilds)
                 {
-                    if (skeletonGuilds.Contains(guild.Id)) continue;
-                    
-                    foreach (var gchannel in guild.Channels)
+                    var gId = guild.Id;
+
+                    if (skeletonGuilds.Contains(gId)) continue;
+
+                    var channels = guild.Channels;
+
+                    foreach (var gchannel in channels)
                     {
+                        var channelId = gchannel.Id;
+
                         if (!(gchannel is ISocketMessageChannel channel)) continue;
-                        if (zombieDisposable.ContainsKey(channel.Id)) continue;
-                        
-                        zombieDisposable.Add(channel.Id, channel.EnterTypingState());
-                            
+                        if (zombieDisposable.ContainsKey(channelId)) continue;
+                      
+                        zombieDisposable.Add(channelId, channel.EnterTypingState());
+                        await Task.Delay(400);
                     }
 
-                    skeletonGuilds.Add(guild.Id);
+                    skeletonGuilds.Add(gId);
+                    await Task.Delay(5000);
                 }
                 await message.Channel.SendMessageAsync("Ainz mode enabled, gg?");
                 ainz = true;
             }
             else
             {
-                foreach (var guild in Bot.Instance.client.Guilds)
+                foreach (var guild in guilds)
                 {
-                    if (!skeletonGuilds.Contains(guild.Id)) continue;
-                    
-                    foreach (var gchannel in guild.Channels)
-                    {
-                        if (!(gchannel is ISocketMessageChannel channel)) continue;
-                        if (!zombieDisposable.ContainsKey(channel.Id)) continue;
-                        
-                        zombieDisposable[channel.Id].Dispose();
-                        zombieDisposable.Remove(channel.Id);
-                    }
+                    var gId = guild.Id;
 
-                    skeletonGuilds.Remove(guild.Id);
+                    if (!skeletonGuilds.Contains(gId)) continue;
+                    
+                    var channels = guild.Channels;
+                    foreach (var gchannel in channels)
+                    {
+                        var channelId = gchannel.Id;
+
+                        if (!(gchannel is ISocketMessageChannel channel)) continue;
+                        if (!zombieDisposable.ContainsKey(channelId)) continue;
+                        
+                        zombieDisposable[channelId].Dispose();
+                        zombieDisposable.Remove(channelId);
+                        await Task.Delay(400);
+                    }
+                    skeletonGuilds.Remove(gId);
+                    skeletonGuilds.Remove(gId); await Task.Delay(2000);
+
                 }
                 await message.Channel.SendMessageAsync("Ainz mode disabled, gg?");
                 ainz = false;
             }
-
-            await message.DeleteAsync();
-            
 
         }
     }

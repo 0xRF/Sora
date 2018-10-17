@@ -14,8 +14,7 @@ namespace Sora
     public class Config
     {
 
-        private static string asm_dir => Assembly.GetExecutingAssembly().Location;
-        private static string sz_config_dir => asm_dir.Remove(asm_dir.Length - 8) + "/config.json";
+        private static string sz_config_dir => Bot.asm_dir + "/config.json";
         
         public static void GetSavedData()
         {

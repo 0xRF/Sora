@@ -92,7 +92,7 @@ namespace Sora
                         else
                             objects = b.ToArray();
                             
-                        await (Task)cmd.method.Invoke(null, objects);
+                         cmd.method.Invoke(null, objects);
                     }
                     else
                     {

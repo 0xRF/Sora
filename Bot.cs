@@ -4,15 +4,19 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using Sora.Features;
 using Log = Sora.Logging;
+using System.Reflection;
+using System.Linq;
+
 namespace Sora
 {
     public class Bot
     {
         public static Bot Instance {get;private set;}
 
-        private List<Feature> lFeatures = new List<Feature>();
-
+        private List<Feature> lFeatures;
+        public static string asm_dir => Assembly.GetExecutingAssembly().Location.Remove(Assembly.GetExecutingAssembly().Location.Length - 8);
 
         [Savable]
         private static string sz_token = "";
@@ -57,6 +61,16 @@ namespace Sora
                 feat.OnMessageReceive(message);
             });
 
+            List<IUser> users = new List<IUser>();
+            users.AddRange(message.MentionedUsers);
+            if(users.Where(x => x.Id == client.CurrentUser.Id).Count() == 1)
+            {
+                lFeatures.ForEach(feat =>
+                {
+                    feat.OnMentioned(message);
+                });
+            }
+
             if (message.Author.Id != client.CurrentUser.Id)
                 return;
 
@@ -98,6 +112,12 @@ namespace Sora
         private Task BotStarted()
         {
             Console.WriteLine($"{client.CurrentUser} is connected!");
+
+
+            lFeatures = new List<Feature>()
+            {
+               new Evil(), new UserInfo()
+            };
 
             return Task.CompletedTask;
         }

@@ -26,11 +26,14 @@ namespace Sora.Features
                 return;
             }
 
+            string avUrl = user.GetAvatarUrl(ImageFormat.Auto);
             var eb = new EmbedBuilder();
             eb.WithColor(Color.Red);
-            eb.WithImageUrl(user.GetAvatarUrl(ImageFormat.Auto));
- 
-
+            eb.WithTitle(user.Username + "'s Avatar");
+            eb.WithUrl(avUrl);
+            eb.WithImageUrl(avUrl);
+            
+            await sm.DeleteAsync();
             await sm.Channel.SendMessageAsync("", false, eb);
         }
 
