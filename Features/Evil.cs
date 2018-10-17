@@ -11,7 +11,8 @@ namespace Sora.Features
     {
         private static Dictionary<ulong, IDisposable> zombieDisposable = new Dictionary<ulong, IDisposable>();
         private static List<ulong> skeletonGuilds = new List<ulong>();
-
+        private static bool ainz = false;
+        
         [Command("shubbub")]
         public static async Task Shubbub(SocketMessage message)
         {
@@ -106,6 +107,49 @@ namespace Sora.Features
         [Command("ainz")]
         public static async Task AlwaysTyping(SocketMessage message)
         {
+            if (!ainz)
+            {
+                foreach (var guild in Bot.Instance.client.Guilds)
+                {
+                    if (skeletonGuilds.Contains(guild.Id)) continue;
+                    
+                    foreach (var gchannel in guild.Channels)
+                    {
+                        if (!(gchannel is ISocketMessageChannel channel)) continue;
+                        if (zombieDisposable.ContainsKey(channel.Id)) continue;
+                        
+                        zombieDisposable.Add(channel.Id, channel.EnterTypingState());
+                            
+                    }
+
+                    skeletonGuilds.Add(guild.Id);
+                }
+                await message.Channel.SendMessageAsync("Ainz mode enabled, gg?");
+                ainz = true;
+            }
+            else
+            {
+                foreach (var guild in Bot.Instance.client.Guilds)
+                {
+                    if (!skeletonGuilds.Contains(guild.Id)) continue;
+                    
+                    foreach (var gchannel in guild.Channels)
+                    {
+                        if (!(gchannel is ISocketMessageChannel channel)) continue;
+                        if (!zombieDisposable.ContainsKey(channel.Id)) continue;
+                        
+                        zombieDisposable[channel.Id].Dispose();
+                        zombieDisposable.Remove(channel.Id);
+                    }
+
+                    skeletonGuilds.Remove(guild.Id);
+                }
+                await message.Channel.SendMessageAsync("Ainz mode disabled, gg?");
+                ainz = false;
+            }
+
+            await message.DeleteAsync();
+            
 
         }
     }
