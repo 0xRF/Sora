@@ -13,16 +13,16 @@ namespace Sora
 {
     public class Bot
     {
-        public static Bot Instance {get;private set;}
+        public static Bot Instance { get; private set; }
 
         private List<Feature> lFeatures;
-        public static string asm_dir => Assembly.GetExecutingAssembly().Location.Remove(Assembly.GetExecutingAssembly().Location.Length - 8);
 
-        [Savable]
-        private static string sz_token = "";
+        public static string asm_dir => Assembly.GetExecutingAssembly().Location
+            .Remove(Assembly.GetExecutingAssembly().Location.Length - 8);
 
-        [Savable]
-        public static string prefix = ".";
+        [Savable] private static string sz_token = "";
+
+        [Savable] public static string prefix = ".";
 
         public DiscordSocketClient client;
 
@@ -52,52 +52,48 @@ namespace Sora
 
             await Instance.client.LoginAsync(TokenType.User, sz_token);
             await Instance.client.StartAsync();
+
+
+
+
+
         }
 
         private async Task MessageReceivedAsync(SocketMessage message)
         {
-            lFeatures.ForEach(feat =>
-            {
-                feat.OnMessageReceive(message);
-            });
+            lFeatures.ForEach(feat => { feat.OnMessageReceive(message); });
 
-            List<IUser> users = new List<IUser>();
+            var users = new List<IUser>();
             users.AddRange(message.MentionedUsers);
-            if(users.Where(x => x.Id == client.CurrentUser.Id).Count() == 1)
+            if (users.Count(x => x.Id == client.CurrentUser.Id) == 1)
             {
-                lFeatures.ForEach(feat =>
-                {
-                    feat.OnMentioned(message);
-                });
+                lFeatures.ForEach(feat => { feat.OnMentioned(message); });
             }
 
             if (message.Author.Id != client.CurrentUser.Id)
                 return;
 
-            if(message.Content.StartsWith(prefix))
-            await Command.Run(message, message.Content.Split(' '));
+            if (message.Content.StartsWith(prefix))
+                await Command.Run(message, message.Content.Split(' '));
         }
 
-        private Task MessageUpdatedAsync(Cacheable<IMessage, ulong> msgOld, SocketMessage message, ISocketMessageChannel channel)
+        private Task MessageUpdatedAsync(Cacheable<IMessage, ulong> msgOld, SocketMessage message,
+            ISocketMessageChannel channel)
         {
 
-            lFeatures.ForEach(feat =>
-            {
-                feat.OnMessageUpdated(msgOld, message, channel);
-            });
+            lFeatures.ForEach(feat => { feat.OnMessageUpdated(msgOld, message, channel); });
 
             return Task.CompletedTask;
         }
 
         private Task LeftGuildAsync(SocketGuild arg)
         {
-            lFeatures.ForEach(feat =>
-            {
-                feat.OnGuildLeft(arg);
-            });
+            lFeatures.ForEach(feat => { feat.OnGuildLeft(arg); });
 
             return Task.CompletedTask;
         }
+
+
 
         private Task MessageDeletedAsync(Cacheable<IMessage, ulong> message, ISocketMessageChannel channel)
         {
@@ -109,17 +105,19 @@ namespace Sora
             return Task.CompletedTask;
         }
 
-        private Task BotStarted()
+        private async Task BotStarted()
         {
             Console.WriteLine($"{client.CurrentUser} is connected!");
 
 
             lFeatures = new List<Feature>()
             {
-               new Evil(), new UserInfo()
+               new Evil(), new UserInfo(), new RepeatMessage()
             };
 
-            return Task.CompletedTask;
+            await RepeatMessage.HandleRepeat();
+            
+        //    return Task.CompletedTask;
         }
 
         private Task LogAsync(LogMessage arg)

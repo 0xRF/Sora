@@ -14,7 +14,7 @@ namespace Sora
     public class Config
     {
 
-        private static string sz_config_dir => Bot.asm_dir + "/config.json";
+        public static string sz_config_dir => Bot.asm_dir + "/config.json";
         
         public static void GetSavedData()
         {
@@ -40,7 +40,11 @@ namespace Sora
             .ForEach(t => t.GetFields(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic)
             .Where(field => Attribute.GetCustomAttribute(field, typeof(SavableAttribute)) != null)
             .Where(field => field.Name == savaData.Key.Split('.')[1]).ToList()
-            .ForEach(field => field.SetValue(null, savaData.Value))));
+            .ForEach(field =>
+                    {
+                        if(savaData.Value != null)
+                        field.SetValue(null, savaData.Value);
+                    } )));
         }
 
 

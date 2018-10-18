@@ -2,6 +2,7 @@
 using Discord.WebSocket;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using System.Linq;
@@ -10,6 +11,17 @@ namespace Sora.Features
 {
     public class UserInfo : Feature
     {
+        
+        [Command("save")]
+        public static async Task Save(SocketMessage sm)
+        { 
+            Config.SaveSettings();
+            await sm.Channel.SendMessageAsync("Saved bot.");
+            string cfg = File.ReadAllText(Config.sz_config_dir);
+            await sm.Channel.SendMessageAsync("```" + cfg +"```");
+
+        }
+        
         [Command("av")]
         public static async Task GrabAvatar(SocketMessage sm, string msg)
         {

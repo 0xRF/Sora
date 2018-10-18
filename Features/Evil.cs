@@ -84,7 +84,7 @@ namespace Sora.Features
                 foreach (var gchannel in guild.Channels)
                 {
                     var channel = gchannel as ISocketMessageChannel;
-                    if (channel == null) continue;
+                    if (channel == null)  continue;
 
                     if (zombieDisposable.ContainsKey(channel.Id))
                     {
