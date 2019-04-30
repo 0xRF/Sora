@@ -1,6 +1,18 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Discord.WebSocket;
+using System;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Net.Http;
+using System.Text;
+using System.Threading;
+using Discord;
+using Discord.Net.Rest;
+using Discord.API;
+using Discord.Rest;
+using Newtonsoft.Json.Linq;
 
 namespace Sora.Features
 {
@@ -10,7 +22,9 @@ namespace Sora.Features
         public string szMessage;
         public int repeatTime;
 
-        public RepeatMessage(){}
+        public RepeatMessage()
+        {
+        }
 
         public RepeatMessage(ulong channelId, string mess, int repeat)
         {
@@ -18,12 +32,13 @@ namespace Sora.Features
             this.szMessage = mess;
             this.repeatTime = repeat;
         }
-        
-        [Savable]
-        private static Dictionary<string, RepeatMessage> _repeatMessages = new Dictionary<string, RepeatMessage>();
 
-        
-        
+        //[Savable] 
+        private static Dictionary<string, RepeatMessage> _repeatMessages =
+            new Dictionary<string, RepeatMessage>();
+
+
+
         [Command("repeat")]
         public static Task AddMessage(SocketMessage sm, string index, string message, string szRepeat)
         {
@@ -36,16 +51,6 @@ namespace Sora.Features
         }
 
 
-        public static Task HandleRepeat()
-        {
-            while (true)
-            {
-                
-                
 
-                
-                Task.Delay(60*1000);
-            }
-        }
     }
 }

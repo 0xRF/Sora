@@ -23,7 +23,6 @@ namespace Sora
             return null;
         }
 
-
         /// <summary>
         /// Does a fuzzy search for a pattern within a string.
         /// </summary>
@@ -175,7 +174,7 @@ namespace Sora
             outScore = score;
             return patternIdx == patternLength;
         }
-
-
     }
 }
+
+

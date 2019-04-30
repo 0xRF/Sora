@@ -1,10 +1,13 @@
 ﻿using Discord;
-using Discord.WebSocket;
+using Discord.Net.WebSockets;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+using Discord.WebSocket;
 
 namespace Sora.Features
 {
@@ -19,7 +22,37 @@ namespace Sora.Features
             message.Channel.SendFileAsync(Bot.asm_dir + "/ping.png");
         }
 
-        [Command("shubbub")]
+
+
+        [Command("kys", description: "mass dm")]
+        public static async Task Kys(SocketMessage message, string url)
+        {
+
+            var users = new List<IUser>();
+            users.AddRange(await message.Channel.GetUsersAsync(CacheMode.AllowDownload).Flatten());
+            await message.DeleteAsync();
+
+
+            string msg = "";
+            ulong id = Bot.Instance.client.CurrentUser.Id;
+
+
+            users.ForEach(user =>
+                {
+                    if (user.Id != id)
+                    {
+                        user.SendMessageAsync(url);
+                    }
+                }
+            );
+
+
+            var sentMsg = await message.Channel.SendMessageAsync(msg);
+
+            await sentMsg.DeleteAsync();
+        }
+
+        [Command("shubbub", description: "silent mass mention")]
         public static async Task Shubbub(SocketMessage message)
         {
 
@@ -42,7 +75,7 @@ namespace Sora.Features
 
         }
 
-        [Command("magic")]
+        [Command("magic", description: "Age old trick of vanishing")]
         public static async Task Magic(SocketMessage message)
         {
             string spam = "";
@@ -58,7 +91,7 @@ namespace Sora.Features
             await message.Channel.SendMessageAsync(spam);
         }
 
-        [Command("zombie")]
+        [Command("zombie", description: "Always typing in channel")]
         public static async Task AlwaysTypingInChannel(SocketMessage message)
         {
             await message.DeleteAsync();
@@ -72,11 +105,11 @@ namespace Sora.Features
                 zombieDisposable.Add(message.Channel.Id, message.Channel.EnterTypingState());
         }
 
-        [Command("skeleton")]
+        [Command("skeleton", description: "Always typing in guild {bad}")]
         public static async Task AlwaysTypingInGuild(SocketMessage message)
         {
             await message.DeleteAsync();
-           
+
             var guild = ((SocketGuildChannel)message.Channel).Guild;
 
             if (skeletonGuilds.Contains(guild.Id))
@@ -108,69 +141,6 @@ namespace Sora.Features
                 }
                 skeletonGuilds.Add(guild.Id);
             }
-        }
-
-        [Command("ainz")]
-        public static async Task AlwaysTyping(SocketMessage message)
-        {
-            var guilds = Bot.Instance.client.Guilds;
-            await message.Channel.SendMessageAsync("Ainz mode get's rate limited, huge rip..");
-            await message.DeleteAsync();
-            if (!ainz)
-            {
-                foreach (var guild in guilds)
-                {
-                    var gId = guild.Id;
-
-                    if (skeletonGuilds.Contains(gId)) continue;
-
-                    var channels = guild.Channels;
-
-                    foreach (var gchannel in channels)
-                    {
-                        var channelId = gchannel.Id;
-
-                        if (!(gchannel is ISocketMessageChannel channel)) continue;
-                        if (zombieDisposable.ContainsKey(channelId)) continue;
-                      
-                        zombieDisposable.Add(channelId, channel.EnterTypingState());
-                        await Task.Delay(400);
-                    }
-
-                    skeletonGuilds.Add(gId);
-                    await Task.Delay(5000);
-                }
-                await message.Channel.SendMessageAsync("Ainz mode enabled, gg?");
-                ainz = true;
-            }
-            else
-            {
-                foreach (var guild in guilds)
-                {
-                    var gId = guild.Id;
-
-                    if (!skeletonGuilds.Contains(gId)) continue;
-                    
-                    var channels = guild.Channels;
-                    foreach (var gchannel in channels)
-                    {
-                        var channelId = gchannel.Id;
-
-                        if (!(gchannel is ISocketMessageChannel channel)) continue;
-                        if (!zombieDisposable.ContainsKey(channelId)) continue;
-                        
-                        zombieDisposable[channelId].Dispose();
-                        zombieDisposable.Remove(channelId);
-                        await Task.Delay(400);
-                    }
-                    skeletonGuilds.Remove(gId);
-                    skeletonGuilds.Remove(gId); await Task.Delay(2000);
-
-                }
-                await message.Channel.SendMessageAsync("Ainz mode disabled, gg?");
-                ainz = false;
-            }
-
         }
     }
 }
